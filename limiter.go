@@ -1,6 +1,7 @@
 package checkpoint
 
 import (
+	"fmt"
 	"net/http"
 	"strconv"
 	"sync"
@@ -52,6 +53,7 @@ func CreateRateLimiter(requestLimit int, window time.Duration, opts ...Option) *
 	for _, opt := range opts {
 		opt(rl)
 	}
+	// if no current count create a new window and set config
 	if rl.limitCount == nil {
 		rl.limitCount = NewSlidingWindowLimitCount(requestLimit, window)
 		rl.limitCount.Config(requestLimit, window)
@@ -87,20 +89,21 @@ func (s *SlidingWindowLimitCount) Get(key string, currWindow, prevWindow time.Ti
 
 	timestamps := s.clients[key]
 
-	idx := 0
-	for i, t := range timestamps {
+	// Keep only those within the window
+	var validTimestamps []time.Time
+	for _, t := range timestamps {
 		if t.After(windowStart) {
-			idx = i
-			break
+			validTimestamps = append(validTimestamps, t)
 		}
 	}
-	timestamps = timestamps[idx:]
 
-	timestamps = append(timestamps, now)
-	s.clients[key] = timestamps
+	// Append current request timestamp
+	validTimestamps = append(validTimestamps, now)
+	s.clients[key] = validTimestamps
 
-	return len(timestamps), 0, nil
+	return len(validTimestamps), 0, nil
 }
+
 func (rl *RateLimiter) Handler(h http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		var key string
@@ -116,9 +119,11 @@ func (rl *RateLimiter) Handler(h http.Handler) http.Handler {
 		} else {
 			key = r.RemoteAddr // ip adddress
 		}
+
 		rl.mu.Lock()
 		defer rl.mu.Unlock()
 		count, _, err := rl.limitCount.Get(key, time.Now(), time.Now().Add(-rl.window))
+		fmt.Printf("limit count struct %+v\n", count)
 
 		if err != nil {
 			rl.onError(w, r, err)
