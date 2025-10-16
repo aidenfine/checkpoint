@@ -175,7 +175,7 @@ func TestRateLimiter_RequestAfterWindow(t *testing.T) {
 	}
 
 	// Set time to let window expire
-	time.Sleep(900 * time.Millisecond)
+	time.Sleep(501 * time.Millisecond)
 
 	// Third Request should be okay
 	w3 := httptest.NewRecorder()
