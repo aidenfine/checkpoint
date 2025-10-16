@@ -1,7 +1,6 @@
 package checkpoint
 
 import (
-	"fmt"
 	"net/http"
 	"strconv"
 	"sync"
@@ -51,7 +50,6 @@ func CreateRateLimiter(requestLimit int, window time.Duration, opts ...Option) *
 		redirect:     "",
 	}
 	for _, opt := range opts {
-		fmt.Println(opt, "OPT")
 		opt(rl)
 	}
 	if rl.limitCount == nil {
@@ -88,8 +86,6 @@ func (s *SlidingWindowLimitCount) Get(key string, currWindow, prevWindow time.Ti
 	windowStart := now.Add(-s.window)
 
 	timestamps := s.clients[key]
-
-	fmt.Println(timestamps, "timestamps")
 
 	idx := 0
 	for i, t := range timestamps {
