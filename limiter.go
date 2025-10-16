@@ -3,6 +3,7 @@ package checkpoint
 import (
 	"fmt"
 	"net/http"
+	"strconv"
 	"sync"
 	"time"
 )
@@ -33,6 +34,7 @@ type RateLimiter struct {
 	headers       ResponseHeaders
 	mu            sync.Mutex
 	keyFunc       GetKey // define what method to rate limit user ex: ip, endpoint, userid...
+	redirect      string
 }
 
 type SlidingWindowLimitCount struct {
@@ -46,15 +48,10 @@ func CreateRateLimiter(requestLimit int, window time.Duration, opts ...Option) *
 	rl := &RateLimiter{
 		requestLimit: requestLimit,
 		window:       window,
-		headers: ResponseHeaders{
-			Reset:              "X-RateLimit-Reset",
-			RateLimit:          "X-RateLimit-Limit",
-			RateLimitRemaining: "X-RateLimit-Remaining",
-			RateLimitReset:     "X-RateLimit-Reset",
-			RetryAfter:         "X-RateLimit-Retry-After",
-		},
+		redirect:     "",
 	}
 	for _, opt := range opts {
+		fmt.Println(opt, "OPT")
 		opt(rl)
 	}
 	if rl.limitCount == nil {
@@ -137,6 +134,10 @@ func (rl *RateLimiter) Handler(h http.Handler) http.Handler {
 			return
 		}
 
+		requestsLeft := rl.requestLimit - count
+
+		w.Header().Set(rl.headers.RateLimit, strconv.Itoa(rl.requestLimit))
+		w.Header().Set(rl.headers.RateLimitRemaining, strconv.Itoa(requestsLeft))
 		h.ServeHTTP(w, r)
 	})
 }

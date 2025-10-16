@@ -12,6 +12,7 @@ import (
 // add options here
 type Option func(rl *RateLimiter)
 type GetKey func(r *http.Request) (string, error)
+type SetHeaders func(r *http.Request) error
 type GetKeyWithStringArg func(r *http.Request, s string) (string, error)
 
 // build limiter
@@ -30,6 +31,11 @@ func LimitByEndpoint(requestLimit int, window time.Duration) func(h http.Handler
 func WithKey(keyFunc GetKey) Option {
 	return func(rl *RateLimiter) {
 		rl.keyFunc = keyFunc
+	}
+}
+func WithHeaders(headers ResponseHeaders) Option {
+	return func(rl *RateLimiter) {
+		rl.headers = headers
 	}
 }
 func IpKeyFunc(r *http.Request) (string, error) {
