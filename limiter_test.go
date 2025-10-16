@@ -26,6 +26,58 @@ func TestRateLimiter_AllowsRequestUnderLimit(t *testing.T) {
 	}
 }
 
+func TestRateLimiter_AllowRequestsFromDifferentIps(t *testing.T) {
+	limiter := checkpoint.LimitByEndpoint(1, time.Second)
+
+	handler := limiter(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+	}))
+	userReq := httptest.NewRequest("GET", "/users", nil)
+	homeReq := httptest.NewRequest("GET", "/", nil)
+
+	ur1 := httptest.NewRecorder()
+	handler.ServeHTTP(ur1, userReq)
+
+	ur2 := httptest.NewRecorder()
+	handler.ServeHTTP(ur2, userReq)
+	if ur2.Result().StatusCode != http.StatusTooManyRequests {
+		t.Errorf("expected 429 Too many Requests, got %d", ur2.Result().StatusCode)
+	}
+
+	hr1 := httptest.NewRecorder()
+	handler.ServeHTTP(hr1, homeReq)
+
+	if hr1.Result().StatusCode != http.StatusOK {
+		t.Errorf("expected 200 OK, got %d", hr1.Result().StatusCode)
+	}
+}
+func TestRateLimiter_AllowRequestsFromDifferentSubRoutes(t *testing.T) {
+	limiter := checkpoint.LimitByEndpoint(1, time.Second)
+
+	handler := limiter(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+	}))
+	userReq := httptest.NewRequest("GET", "/users", nil)
+	homeReq := httptest.NewRequest("GET", "/users/200", nil)
+
+	ur1 := httptest.NewRecorder()
+	handler.ServeHTTP(ur1, userReq)
+
+	ur2 := httptest.NewRecorder()
+	handler.ServeHTTP(ur2, userReq)
+	if ur2.Result().StatusCode != http.StatusTooManyRequests {
+		t.Errorf("expected 429 Too many Requests, got %d", ur2.Result().StatusCode)
+	}
+
+	hr1 := httptest.NewRecorder()
+	handler.ServeHTTP(hr1, homeReq)
+
+	if hr1.Result().StatusCode != http.StatusOK {
+		t.Errorf("expected 200 OK, got %d", hr1.Result().StatusCode)
+	}
+
+}
+
 func TestRateLimiter_BlocksRequestOverLimit(t *testing.T) {
 	limiter := checkpoint.CreateRateLimiter(2, time.Second)
 
