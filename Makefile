@@ -1,3 +1,5 @@
+-include .env
+
 format:
 	go fmt ./...
 
@@ -11,3 +13,6 @@ pre-commit:
 	$(format)
 	$(test)
 	$(build)
+
+run:
+	SERVICE_URL=${SERVICE_URL} LOG_LEVEL=${LOG_LEVEL} PORT=${PORT} go run cmd/main.go

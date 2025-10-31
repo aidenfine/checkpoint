@@ -8,6 +8,7 @@ import (
 type Config struct {
 	ServiceUrl string
 	Logs       LogConfig
+	Port       string
 }
 
 var (
@@ -19,10 +20,11 @@ type LogConfig struct {
 	Level string
 }
 
-func LoadConfigs() {
+func LoadConfig() {
 	once.Do(func() {
 		cfg = &Config{
 			ServiceUrl: os.Getenv("SERVICE_URL"),
+			Port:       os.Getenv("PORT"),
 			Logs: LogConfig{
 				Level: getEnvWithDefault("LOG_LEVEL", "ERROR"),
 			},
@@ -38,7 +40,7 @@ func getEnvWithDefault(key, def string) string {
 
 }
 
-func Get() *Config {
+func GetConfig() *Config {
 	if cfg == nil {
 		panic("Config not loaded, call config.Load()") // may not need to panic here
 	}
