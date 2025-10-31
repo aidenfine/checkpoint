@@ -6,7 +6,6 @@ import (
 	"net/http"
 	"net/http/httputil"
 	"net/url"
-	"os"
 	"strings"
 
 	"github.com/aidenfine/checkpoint"
@@ -14,15 +13,20 @@ import (
 
 func main() {
 
-	serviceUrl := os.Getenv("SERVICE_URL")
+	checkpoint.LoadConfig()
+	cfg := checkpoint.GetConfig()
 
-	if serviceUrl == "" {
-		panic("missing SERVICE_URL in env!")
+	if cfg.ServiceUrl == "" {
+		panic("missing SERVICE_URL env")
 	}
-	backendURL, _ := url.Parse(serviceUrl)
+	if cfg.Port == "" {
+		panic("missing PORT env")
+	}
+
+	backendURL, _ := url.Parse(cfg.ServiceUrl)
 	proxy := httputil.NewSingleHostReverseProxy(backendURL)
 
-	limiter := checkpoint.NewTokenBucket(3, 100, 5)
+	limiter := checkpoint.NewTokenBucket(3, 75, 5)
 
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		ip := getIP(r)
@@ -39,8 +43,8 @@ func main() {
 		proxy.ServeHTTP(w, r)
 	})
 
-	fmt.Println("Reverse proxy :8080 → forwarding to :8000")
-	log.Fatal(http.ListenAndServe(":8080", nil))
+	fmt.Printf("Reverse proxy :%s → forwarding to :%s \n", cfg.Port, cfg.ServiceUrl)
+	log.Fatal(http.ListenAndServe(":"+cfg.Port, nil))
 }
 
 func getIP(r *http.Request) string {
