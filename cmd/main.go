@@ -22,7 +22,7 @@ func main() {
 	backendURL, _ := url.Parse(serviceUrl)
 	proxy := httputil.NewSingleHostReverseProxy(backendURL)
 
-	limiter := checkpoint.NewTokenBucket(1, 100, 5)
+	limiter := checkpoint.NewTokenBucket(3, 100, 5)
 
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		ip := getIP(r)

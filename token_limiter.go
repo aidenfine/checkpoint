@@ -39,7 +39,7 @@ func (tb *TokenBucket) setClient(ip string, data ClientRequestData) {
 	tb.clients[ip] = data
 }
 
-// TODO: is there a more go way of doing this? Seems like a weird way of doing testing
+// TODO: is there a better/cleaner way of doing this? Seems like a weird way of doing testing
 func (tb *TokenBucket) SetClientForTest(ip string, tokens int, lastRequest time.Time) {
 	tb.setClient(ip, ClientRequestData{
 		LastRequest: lastRequest,
