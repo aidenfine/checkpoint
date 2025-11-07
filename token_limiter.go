@@ -20,7 +20,7 @@ type TokenBucket struct {
 	onRateLimited   http.HandlerFunc
 }
 
-func NewTokenBucket(refillRate, maxTokens int, tokensPerRefill int) *TokenBucket {
+func NewTokenBucket(maxTokens, refillRate int, tokensPerRefill int) *TokenBucket {
 	tb := &TokenBucket{
 		clients:         make(map[string]ClientRequestData),
 		refillRate:      refillRate,
@@ -52,6 +52,7 @@ func (tb *TokenBucket) SetClientForTest(ip string, tokens int, lastRequest time.
 
 func (tb *TokenBucket) Allow(ip string) (bool, int) {
 	client := tb.getClient(ip)
+	fmt.Printf("Client Config: %+v\n", client)
 	now := time.Now()
 
 	if client.LastRequest.IsZero() {
@@ -84,7 +85,7 @@ func (tb *TokenBucket) Handler(next http.Handler) http.Handler {
 		if !allowed {
 			if tb.onRateLimited != nil {
 				tb.onRateLimited(w, r)
-				return
+				return // is this causing the invalid response page when user is rate limited?
 			}
 			http.Error(w, "Rate limit exceeded", http.StatusTooManyRequests)
 			return
