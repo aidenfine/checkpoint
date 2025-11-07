@@ -1,8 +1,8 @@
 package checkpointmiddleware
 
 import (
+	"fmt"
 	"net/http"
-	"strings"
 	"sync"
 	"time"
 )
@@ -11,7 +11,6 @@ type ClientRequestData struct {
 	LastRequest time.Time
 	Tokens      int
 }
-
 type TokenBucket struct {
 	mu              sync.Mutex
 	clients         map[string]ClientRequestData
@@ -22,12 +21,13 @@ type TokenBucket struct {
 }
 
 func NewTokenBucket(refillRate, maxTokens int, tokensPerRefill int) *TokenBucket {
-	return &TokenBucket{
+	tb := &TokenBucket{
 		clients:         make(map[string]ClientRequestData),
 		refillRate:      refillRate,
 		maxTokens:       maxTokens,
 		tokensPerRefill: tokensPerRefill,
 	}
+	return tb
 }
 
 func (tb *TokenBucket) getClient(ip string) ClientRequestData {
@@ -74,7 +74,10 @@ func (tb *TokenBucket) Allow(ip string) (bool, int) {
 
 func (tb *TokenBucket) Handler(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		ip := getClientIP(r)
+		ip, err := getClientIP(r)
+		if err != nil {
+			fmt.Println("error has happened when getting client ip")
+		}
 
 		allowed, remainingTokens := tb.Allow(ip)
 
@@ -91,33 +94,4 @@ func (tb *TokenBucket) Handler(next http.Handler) http.Handler {
 
 		next.ServeHTTP(w, r)
 	})
-}
-
-// getClientIP extracts the real client IP from the request
-// This handles cases where the app is behind a reverse proxy
-func getClientIP(r *http.Request) string {
-	// Check X-Forwarded-For header (set by most reverse proxies)
-	if xff := r.Header.Get("X-Forwarded-For"); xff != "" {
-		// X-Forwarded-For can contain multiple IPs (client, proxy1, proxy2, ...)
-		// The first one is the original client
-		ips := strings.Split(xff, ",")
-		if len(ips) > 0 {
-			return strings.TrimSpace(ips[0])
-		}
-	}
-
-	// Check X-Real-IP header (used by nginx and others)
-	if xri := r.Header.Get("X-Real-IP"); xri != "" {
-		return strings.TrimSpace(xri)
-	}
-
-	// Fallback to RemoteAddr
-	// This will be the proxy's IP if behind a reverse proxy without proper headers
-	ip := r.RemoteAddr
-	// RemoteAddr includes port, so we need to strip it
-	if idx := strings.LastIndex(ip, ":"); idx != -1 {
-		ip = ip[:idx]
-	}
-
-	return ip
 }

@@ -8,6 +8,7 @@ import (
 )
 
 func TestTokenBucketLimiter_HasEnoughTokens(t *testing.T) {
+
 	limiter := checkpointmiddleware.NewTokenBucket(1, 100, 5)
 
 	ip := "1"
@@ -23,6 +24,7 @@ func TestTokenBucketLimiter_HasEnoughTokens(t *testing.T) {
 }
 
 func TestTokenBucketLimiter_DoesNotHaveEnoughTokens(t *testing.T) {
+
 	limiter := checkpointmiddleware.NewTokenBucket(1, 100, 5)
 
 	ip := "1"
@@ -40,6 +42,7 @@ func TestTokenBucketLimiter_DoesNotHaveEnoughTokens(t *testing.T) {
 }
 
 func TestTokenBucketLimiter_HasZeroTokensButCanBeRefilled(t *testing.T) {
+
 	limiter := checkpointmiddleware.NewTokenBucket(1, 100, 5)
 
 	ip := "1"

@@ -11,3 +11,6 @@ func Limit(maxTokens, refillRate, tokensPerRefill int) func(next http.Handler) h
 func LimitByIp(maxTokens, refillRate, tokensPerRefill int) func(next http.Handler) http.Handler {
 	return Limit(maxTokens, refillRate, tokensPerRefill)
 }
+func LimitIpByEndpoint(maxTokens, refillRate, tokensPerRefill int) func(next http.Handler) http.Handler {
+	return Limit(maxTokens, refillRate, tokensPerRefill)
+}
