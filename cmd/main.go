@@ -13,7 +13,7 @@ func main() {
 		fmt.Fprintln(w, "Hello World")
 	})
 
-	rlMiddleware := checkpointmiddleware.LimitByIp(100, 1, 1)
+	rlMiddleware := checkpointmiddleware.LimitByIp(20, 1, 1)
 	rlHandler := rlMiddleware(mux)
 
 	http.ListenAndServe(":8080", rlHandler)
