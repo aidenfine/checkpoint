@@ -1,13 +1,13 @@
 -include .env
 
-format:
+lint:
 	go fmt ./...
 
 test:
 	go test ./...
 
 build:
-	go build checkpointmiddleware.go
+	go build checkpoint.go
 	
 pre-commit:
 	$(format)

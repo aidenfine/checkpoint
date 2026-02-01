@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"net/http"
 
-	checkpointmiddleware "github.com/aidenfine/checkpoint"
+	checkpoint "github.com/aidenfine/checkpoint"
 )
 
 func main() {
@@ -13,7 +13,7 @@ func main() {
 		fmt.Fprintln(w, "Hello World")
 	})
 
-	rlMiddleware := checkpointmiddleware.LimitByIp(20, 1, 1)
+	rlMiddleware := checkpoint.LimitByIp(20, 1, 1)
 	rlHandler := rlMiddleware(mux)
 
 	http.ListenAndServe(":8080", rlHandler)

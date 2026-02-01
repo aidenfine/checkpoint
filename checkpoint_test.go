@@ -1,15 +1,15 @@
-package checkpointmiddleware_test
+package checkpoint_test
 
 import (
 	"testing"
 	"time"
 
-	checkpointmiddleware "github.com/aidenfine/checkpoint"
+	checkpoint "github.com/aidenfine/checkpoint"
 )
 
 func TestTokenBucketLimiter_HasEnoughTokens(t *testing.T) {
 
-	limiter := checkpointmiddleware.NewTokenBucket(100, 1, 5)
+	limiter := checkpoint.NewTokenBucket(100, 1, 5)
 
 	ip := "1"
 
@@ -25,7 +25,7 @@ func TestTokenBucketLimiter_HasEnoughTokens(t *testing.T) {
 
 func TestTokenBucketLimiter_DoesNotHaveEnoughTokens(t *testing.T) {
 
-	limiter := checkpointmiddleware.NewTokenBucket(100, 1, 5)
+	limiter := checkpoint.NewTokenBucket(100, 1, 5)
 
 	ip := "1"
 
@@ -43,7 +43,7 @@ func TestTokenBucketLimiter_DoesNotHaveEnoughTokens(t *testing.T) {
 
 func TestTokenBucketLimiter_HasZeroTokensButCanBeRefilled(t *testing.T) {
 
-	limiter := checkpointmiddleware.NewTokenBucket(100, 1, 5)
+	limiter := checkpoint.NewTokenBucket(100, 1, 5)
 
 	ip := "1"
 

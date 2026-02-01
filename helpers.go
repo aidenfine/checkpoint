@@ -1,4 +1,4 @@
-package checkpointmiddleware
+package checkpoint
 
 import (
 	"net"

@@ -1,4 +1,4 @@
-name: CheckpointMiddleware
+name: checkpoint
 
 on:
   push:

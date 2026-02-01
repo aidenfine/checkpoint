@@ -1,4 +1,4 @@
-package checkpointmiddleware
+package checkpoint
 
 var GetClientIpFunc = getClientIP
 var CanonicalizeIPFunc = canonicalizeIP
