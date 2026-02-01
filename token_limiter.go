@@ -52,7 +52,7 @@ func (tb *TokenBucket) SetClientForTest(ip string, tokens int, lastRequest time.
 
 func (tb *TokenBucket) Allow(ip string) (bool, int) {
 	client := tb.getClient(ip)
-	fmt.Printf("Client Config: %+v\n", client)
+	fmt.Printf("Global config: %+v\n", tb.clients)
 	now := time.Now()
 
 	if client.LastRequest.IsZero() {
