@@ -3,6 +3,7 @@ package checkpointmiddleware
 import (
 	"fmt"
 	"net/http"
+	"strconv"
 	"sync"
 	"time"
 )
@@ -11,6 +12,7 @@ type ClientRequestData struct {
 	LastRequest time.Time
 	Tokens      int
 }
+
 type TokenBucket struct {
 	mu              sync.Mutex
 	clients         map[string]ClientRequestData
@@ -30,33 +32,27 @@ func NewTokenBucket(maxTokens, refillRate int, tokensPerRefill int) *TokenBucket
 	return tb
 }
 
-func (tb *TokenBucket) getClient(ip string) ClientRequestData {
-	tb.mu.Lock()
-	defer tb.mu.Unlock()
-	return tb.clients[ip]
-}
-
-func (tb *TokenBucket) setClient(ip string, data ClientRequestData) {
-	tb.mu.Lock()
-	defer tb.mu.Unlock()
-	tb.clients[ip] = data
-}
-
-// TODO: is there a better/cleaner way of doing this? Seems like a weird way of doing testing
 func (tb *TokenBucket) SetClientForTest(ip string, tokens int, lastRequest time.Time) {
-	tb.setClient(ip, ClientRequestData{
+	tb.mu.Lock()
+	defer tb.mu.Unlock()
+	tb.clients[ip] = ClientRequestData{
 		LastRequest: lastRequest,
 		Tokens:      tokens,
-	})
+	}
 }
 
 func (tb *TokenBucket) Allow(ip string) (bool, int) {
-	client := tb.getClient(ip)
-	fmt.Printf("Global config: %+v\n", tb.clients)
+	tb.mu.Lock()
+	defer tb.mu.Unlock()
+
+	client, exists := tb.clients[ip]
 	now := time.Now()
 
-	if client.LastRequest.IsZero() {
-		tb.setClient(ip, ClientRequestData{LastRequest: now, Tokens: tb.maxTokens - 1})
+	if !exists {
+		tb.clients[ip] = ClientRequestData{
+			LastRequest: now,
+			Tokens:      tb.maxTokens - 1,
+		}
 		return true, tb.maxTokens - 1
 	}
 
@@ -69,7 +65,11 @@ func (tb *TokenBucket) Allow(ip string) (bool, int) {
 	}
 
 	newTokens--
-	tb.setClient(ip, ClientRequestData{LastRequest: now, Tokens: newTokens})
+	tb.clients[ip] = ClientRequestData{
+		LastRequest: now,
+		Tokens:      newTokens,
+	}
+
 	return true, newTokens
 }
 
@@ -77,7 +77,9 @@ func (tb *TokenBucket) Handler(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		ip, err := getClientIP(r)
 		if err != nil {
-			fmt.Println("error has happened when getting client ip")
+			fmt.Println("error getting client ip:", err)
+			http.Error(w, "Internal server error", http.StatusInternalServerError)
+			return
 		}
 
 		allowed, remainingTokens := tb.Allow(ip)
@@ -85,13 +87,13 @@ func (tb *TokenBucket) Handler(next http.Handler) http.Handler {
 		if !allowed {
 			if tb.onRateLimited != nil {
 				tb.onRateLimited(w, r)
-				return // is this causing the invalid response page when user is rate limited?
+				return
 			}
 			http.Error(w, "Rate limit exceeded", http.StatusTooManyRequests)
 			return
 		}
 
-		w.Header().Set("X-RateLimit-Remaining", string(rune(remainingTokens)))
+		w.Header().Set("X-RateLimit-Remaining", strconv.Itoa(remainingTokens))
 
 		next.ServeHTTP(w, r)
 	})
