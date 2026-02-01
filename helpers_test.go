@@ -4,7 +4,7 @@ import (
 	"net"
 	"testing"
 
-	checkpointmiddleware "github.com/aidenfine/checkpoint-middleware"
+	checkpointmiddleware "github.com/aidenfine/checkpoint"
 )
 
 func TestCanonicalizeWithIpv4(t *testing.T) {

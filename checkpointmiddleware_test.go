@@ -4,7 +4,7 @@ import (
 	"testing"
 	"time"
 
-	checkpointmiddleware "github.com/aidenfine/checkpoint-middleware"
+	checkpointmiddleware "github.com/aidenfine/checkpoint"
 )
 
 func TestTokenBucketLimiter_HasEnoughTokens(t *testing.T) {

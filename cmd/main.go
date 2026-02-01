@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"net/http"
 
-	checkpointmiddleware "github.com/aidenfine/checkpoint-middleware"
+	checkpointmiddleware "github.com/aidenfine/checkpoint"
 )
 
 func main() {
