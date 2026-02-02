@@ -1,11 +1,22 @@
 package checkpoint_test
 
 import (
+	"fmt"
+	"math/rand"
 	"testing"
 	"time"
 
-	checkpoint "github.com/aidenfine/checkpoint"
+	"github.com/aidenfine/checkpoint"
 )
+
+func generateRandomIPv4() string {
+	o1 := rand.Intn(256)
+	o2 := rand.Intn(256)
+	o3 := rand.Intn(256)
+	o4 := rand.Intn(256)
+
+	return fmt.Sprintf("%d.%d.%d.%d", o1, o2, o3, o4)
+}
 
 func TestTokenBucketLimiter_HasEnoughTokens(t *testing.T) {
 
@@ -22,7 +33,6 @@ func TestTokenBucketLimiter_HasEnoughTokens(t *testing.T) {
 		t.Errorf("expected remaining to be 99 but got %d", remaining)
 	}
 }
-
 func TestTokenBucketLimiter_DoesNotHaveEnoughTokens(t *testing.T) {
 
 	limiter := checkpoint.NewTokenBucket(100, 1, 5)
@@ -52,5 +62,33 @@ func TestTokenBucketLimiter_HasZeroTokensButCanBeRefilled(t *testing.T) {
 
 	if !allowed {
 		t.Errorf("expected request to be allowed but has failed")
+	}
+}
+
+// ---------------- BENCHMARKS ----------------//
+func BenchmarkAllowUniqueIps(b *testing.B) {
+	tb := checkpoint.NewTokenBucket(100, 1, 1)
+
+	ips := make([]string, 1000)
+	for i := range ips {
+		ips[i] = generateRandomIPv4()
+	}
+
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		tb.Allow(ips[i%len(ips)])
+	}
+}
+func BenchmarkAllowNonUniqueIps(b *testing.B) {
+	tb := checkpoint.NewTokenBucket(100, 1, 1)
+
+	ips := make([]string, 5)
+	for i := range ips {
+		ips[i] = generateRandomIPv4()
+	}
+
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		tb.Allow(ips[i%len(ips)])
 	}
 }
