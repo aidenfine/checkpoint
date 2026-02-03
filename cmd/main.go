@@ -3,18 +3,30 @@ package main
 import (
 	"fmt"
 	"net/http"
+	_ "net/http/pprof"
 
 	checkpoint "github.com/aidenfine/checkpoint"
 )
 
 func main() {
-	mux := http.NewServeMux()
-	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintln(w, "Hello World")
 	})
 
-	rlMiddleware := checkpoint.LimitByIp(20, 1, 1)
-	rlHandler := rlMiddleware(mux)
+	// CONFIG METHOD ==
+	config := checkpoint.Config{
+		IgnorePaths:     []string{"/logs"},
+		MaxTokens:       25,
+		RefillRate:      1,
+		TokensPerRefill: 1,
+		LimitMethod:     checkpoint.LimitByIp,
+	}
+
+	// Quick method
+	// rlMiddleware := checkpoint.LimitByIp(25, 1, 1)
+
+	rlMiddleware := checkpoint.WithConfig(config)
+	rlHandler := rlMiddleware(http.DefaultServeMux)
 
 	http.ListenAndServe(":8080", rlHandler)
 }
