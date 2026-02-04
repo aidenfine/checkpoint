@@ -7,5 +7,5 @@ type Config struct {
 	MaxTokens       int      `json:"maxTokens" yaml:"maxTokens"`
 	RefillRate      int      `json:"refillRate" yaml:"refillRate"`
 	TokensPerRefill int      `json:"tokensPerRefill" yaml:"tokensPerRefill"`
-	LimitMethod     func(maxTokens, refillRate, tokensPerRefill int) func(next http.Handler) http.Handler
+	LimitMethod     func(maxTokens, refillRate, tokensPerRefill int, config Config) func(next http.Handler) http.Handler
 }
