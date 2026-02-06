@@ -13,6 +13,10 @@ func main() {
 		fmt.Fprintln(w, "Hello World")
 	})
 
+	http.HandleFunc("/logs", func(w http.ResponseWriter, r *http.Request) {
+		fmt.Fprintln(w, "logs page")
+	})
+
 	// CONFIG METHOD ==
 	config := checkpoint.Config{
 		IgnorePaths:     []string{"/logs"},
@@ -23,7 +27,7 @@ func main() {
 	}
 
 	// Quick method
-	// rlMiddleware := checkpoint.LimitByIp(25, 1, 1)
+	// rlMiddleware := checkpoint.LimitByIp(25, 1 , 1)
 
 	rlMiddleware := checkpoint.WithConfig(config)
 	rlHandler := rlMiddleware(http.DefaultServeMux)

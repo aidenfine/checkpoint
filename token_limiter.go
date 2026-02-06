@@ -3,6 +3,7 @@ package checkpoint
 import (
 	"fmt"
 	"net/http"
+	"path"
 	"strconv"
 	"sync"
 	"time"
@@ -20,14 +21,16 @@ type TokenBucket struct {
 	refillRate      int // seconds per token
 	maxTokens       int
 	onRateLimited   http.HandlerFunc
+	ignorePaths     []string
 }
 
-func NewTokenBucket(maxTokens, refillRate int, tokensPerRefill int) *TokenBucket {
+func NewTokenBucket(maxTokens, refillRate int, tokensPerRefill int, config Config) *TokenBucket {
 	tb := &TokenBucket{
 		clients:         make(map[string]ClientRequestData),
 		refillRate:      refillRate,
 		maxTokens:       maxTokens,
 		tokensPerRefill: tokensPerRefill,
+		ignorePaths:     config.IgnorePaths,
 	}
 	return tb
 }
@@ -75,6 +78,19 @@ func (tb *TokenBucket) Allow(ip string) (bool, int) {
 
 func (tb *TokenBucket) Handler(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+
+		// is api path to be ignored? we may need to make this better because ex: logs/** w
+		// ill not match logs/log we also need to ignore static assets like /favicon
+		currentAPIPath := r.URL.Path
+
+		fmt.Printf("current URL: %s \n", currentAPIPath)
+
+		if tb.matchesIgnorePath(currentAPIPath) {
+			fmt.Println("path ignored")
+			next.ServeHTTP(w, r)
+			return
+		}
+
 		ip, err := getClientIP(r)
 		if err != nil {
 			fmt.Println("error getting client ip:", err)
@@ -97,4 +113,17 @@ func (tb *TokenBucket) Handler(next http.Handler) http.Handler {
 
 		next.ServeHTTP(w, r)
 	})
+}
+
+// Return true if path matches ignore path
+func (tb *TokenBucket) matchesIgnorePath(currentPath string) bool {
+
+	for _, pattern := range tb.ignorePaths {
+		matched, err := path.Match(pattern, currentPath)
+		if err == nil && matched {
+			return true
+		}
+	}
+	return false
+
 }

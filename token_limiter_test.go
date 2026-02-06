@@ -20,7 +20,15 @@ func generateRandomIPv4() string {
 
 func TestTokenBucketLimiter_HasEnoughTokens(t *testing.T) {
 
-	limiter := checkpoint.NewTokenBucket(100, 1, 5)
+	config := checkpoint.Config{
+		IgnorePaths:     []string{},
+		MaxTokens:       100,
+		RefillRate:      1,
+		TokensPerRefill: 5,
+		LimitMethod:     checkpoint.LimitByIp,
+	}
+
+	limiter := checkpoint.NewTokenBucket(100, 1, 5, config)
 
 	ip := "1"
 
@@ -35,7 +43,15 @@ func TestTokenBucketLimiter_HasEnoughTokens(t *testing.T) {
 }
 func TestTokenBucketLimiter_DoesNotHaveEnoughTokens(t *testing.T) {
 
-	limiter := checkpoint.NewTokenBucket(100, 1, 5)
+	config := checkpoint.Config{
+		IgnorePaths:     []string{},
+		MaxTokens:       100,
+		RefillRate:      1,
+		TokensPerRefill: 5,
+		LimitMethod:     checkpoint.LimitByIp,
+	}
+
+	limiter := checkpoint.NewTokenBucket(100, 1, 5, config)
 
 	ip := "1"
 
@@ -53,7 +69,15 @@ func TestTokenBucketLimiter_DoesNotHaveEnoughTokens(t *testing.T) {
 
 func TestTokenBucketLimiter_HasZeroTokensButCanBeRefilled(t *testing.T) {
 
-	limiter := checkpoint.NewTokenBucket(100, 1, 5)
+	config := checkpoint.Config{
+		IgnorePaths:     []string{},
+		MaxTokens:       100,
+		RefillRate:      1,
+		TokensPerRefill: 5,
+		LimitMethod:     checkpoint.LimitByIp,
+	}
+
+	limiter := checkpoint.NewTokenBucket(100, 1, 5, config)
 
 	ip := "1"
 
@@ -67,7 +91,15 @@ func TestTokenBucketLimiter_HasZeroTokensButCanBeRefilled(t *testing.T) {
 
 // ---------------- BENCHMARKS ----------------//
 func BenchmarkAllowUniqueIps(b *testing.B) {
-	tb := checkpoint.NewTokenBucket(100, 1, 1)
+
+	config := checkpoint.Config{
+		IgnorePaths:     []string{},
+		MaxTokens:       100,
+		RefillRate:      1,
+		TokensPerRefill: 1,
+		LimitMethod:     checkpoint.LimitByIp,
+	}
+	tb := checkpoint.NewTokenBucket(100, 1, 1, config)
 
 	ips := make([]string, 1000)
 	for i := range ips {
@@ -80,7 +112,14 @@ func BenchmarkAllowUniqueIps(b *testing.B) {
 	}
 }
 func BenchmarkAllowNonUniqueIps(b *testing.B) {
-	tb := checkpoint.NewTokenBucket(100, 1, 1)
+	config := checkpoint.Config{
+		IgnorePaths:     []string{},
+		MaxTokens:       100,
+		RefillRate:      1,
+		TokensPerRefill: 1,
+		LimitMethod:     checkpoint.LimitByIp,
+	}
+	tb := checkpoint.NewTokenBucket(100, 1, 1, config)
 
 	ips := make([]string, 5)
 	for i := range ips {
