@@ -9,7 +9,7 @@
 
 ## Installation
 
-`go get -u github.com/aidenfine/checkpoint`
+`go get github.com/aidenfine/checkpoint`
 
 ## Quick Start
 You can use checkpoint in two methods.
