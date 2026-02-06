@@ -3,7 +3,7 @@ package checkpoint
 import (
 	"fmt"
 	"net/http"
-	"slices"
+	"path"
 	"strconv"
 	"sync"
 	"time"
@@ -81,11 +81,12 @@ func (tb *TokenBucket) Handler(next http.Handler) http.Handler {
 
 		// is api path to be ignored? we may need to make this better because ex: logs/** w
 		// ill not match logs/log we also need to ignore static assets like /favicon
-		apiURL := r.URL.Path
+		currentAPIPath := r.URL.Path
 
-		fmt.Printf("current URL: %s \n", apiURL)
-		if slices.Contains(tb.ignorePaths, apiURL) {
-			// directly serve http and do not limit
+		fmt.Printf("current URL: %s \n", currentAPIPath)
+
+		if tb.matchesIgnorePath(currentAPIPath) {
+			fmt.Println("path ignored")
 			next.ServeHTTP(w, r)
 			return
 		}
@@ -112,4 +113,17 @@ func (tb *TokenBucket) Handler(next http.Handler) http.Handler {
 
 		next.ServeHTTP(w, r)
 	})
+}
+
+// Return true if path matches ignore path
+func (tb *TokenBucket) matchesIgnorePath(currentPath string) bool {
+
+	for _, pattern := range tb.ignorePaths {
+		matched, err := path.Match(pattern, currentPath)
+		if err == nil && matched {
+			return true
+		}
+	}
+	return false
+
 }
