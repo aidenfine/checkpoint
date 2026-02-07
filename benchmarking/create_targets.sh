@@ -1,10 +1,14 @@
 OUTPUT="targets.txt"
-> $OUTPUT
+> "$OUTPUT"
 
-for i in {1..10000}; do
-    echo "GET http://localhost:8080/" >> $OUTPUT
-    echo "X-Forwarded-For: 10.0.$((i/256)).$((i%256))" >> $OUTPUT
-    echo "" >> $OUTPUT
+N="${1:-10000}"
+
+i=1
+while [ "$i" -le "$N" ]; do
+    echo "GET http://localhost:8080/" >> "$OUTPUT"
+    echo "X-Forwarded-For: 10.0.$((i/256)).$((i%256))" >> "$OUTPUT"
+    echo "" >> "$OUTPUT"
+    i=$((i+1))
 done
 
-echo "Generated $OUTPUT with 10000 unique IPs"
+echo "Generated $OUTPUT with $N unique IPs"

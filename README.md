@@ -55,12 +55,12 @@ func main() {
 
 ## Performance
 
-General Load:
+High Load:
 - **Target Rate**: 25,000 req/s
 - **Duration**: 30 seconds
 - **Total Requests**: 750,000
 
-General Summary:
+High Summary:
 
 | Metric              | Value                             |
 |---------------------|-----------------------------------|
