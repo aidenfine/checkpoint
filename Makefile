@@ -13,9 +13,11 @@ benchmark:
 	go test -v -bench=. -benchmem
 
 load-test:
+	./benchmarking/create_targets.sh 10000
 	vegeta attack -rate=10000 -duration=30s -targets=targets.txt | vegeta report -type=text > report.txt
 
 high-load-test:
+	./benchmarking/create_targets.sh 50000
 	vegeta attack -rate=25000 -duration=30s -targets=targets.txt | vegeta report -type=text > report.txt
 pre-commit:
 	$(format)
